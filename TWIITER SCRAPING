@@ -1,0 +1,144 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyOA7BqcE3U3vCSeLFm+aBiG",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/KarthikGnanavel/KarthikGnanavel/blob/main/TWIITER%20SCRAPING\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 373
+        },
+        "id": "sspS0yAUMlMK",
+        "outputId": "703cc6fb-4418-4853-a13b-49c4442f4ec5"
+      },
+      "outputs": [
+        {
+          "output_type": "error",
+          "ename": "ModuleNotFoundError",
+          "evalue": "ignored",
+          "traceback": [
+            "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+            "\u001b[0;31mModuleNotFoundError\u001b[0m                       Traceback (most recent call last)",
+            "\u001b[0;32m<ipython-input-1-a02aa491a3c9>\u001b[0m in \u001b[0;36m<module>\u001b[0;34m\u001b[0m\n\u001b[1;32m      1\u001b[0m \u001b[0;31m#importing the modules which are al required\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m----> 2\u001b[0;31m \u001b[0;32mimport\u001b[0m \u001b[0msnscrape\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mmodules\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mtwitter\u001b[0m \u001b[0;32mas\u001b[0m \u001b[0msntwitter\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m      3\u001b[0m \u001b[0;32mimport\u001b[0m \u001b[0mpandas\u001b[0m \u001b[0;32mas\u001b[0m \u001b[0mpd\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      4\u001b[0m \u001b[0;32mimport\u001b[0m \u001b[0mstreamlit\u001b[0m \u001b[0;32mas\u001b[0m \u001b[0mst\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m      5\u001b[0m \u001b[0;32mimport\u001b[0m \u001b[0mpymongo\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+            "\u001b[0;31mModuleNotFoundError\u001b[0m: No module named 'snscrape'",
+            "",
+            "\u001b[0;31m---------------------------------------------------------------------------\u001b[0;32m\nNOTE: If your import is failing due to a missing package, you can\nmanually install dependencies using either !pip or !apt.\n\nTo view examples of installing some common dependencies, click the\n\"Open Examples\" button below.\n\u001b[0;31m---------------------------------------------------------------------------\u001b[0m\n"
+          ],
+          "errorDetails": {
+            "actions": [
+              {
+                "action": "open_url",
+                "actionText": "Open Examples",
+                "url": "/notebooks/snippets/importing_libraries.ipynb"
+              }
+            ]
+          }
+        }
+      ],
+      "source": [
+        "#importing the modules which are al required\n",
+        "import snscrape.modules.twitter as sntwitter\n",
+        "import pandas as pd\n",
+        "import streamlit as st\n",
+        "import pymongo\n",
+        "\n",
+        "#Initiallzation of Mongodb server and creating database and collection\n",
+        "def mongo(df):    \n",
+        "    client = pymongo.MongoClient(\"mongodb://localhost:27017\") \n",
+        "    mydb = client[\"twitter_database\"]   \n",
+        "    mycoll = mydb[f\"{search}_collection\"] \n",
+        "    df.reset_index(inplace=True)\n",
+        "    data_dict = df.to_dict(\"records\")\n",
+        "    mycoll.insert_one({\"index\":f\"{search}\",\"data\":data_dict})\n",
+        "    st.success(\"Uploaded Successfully!\",icon='✅') \n",
+        "    collections = mydb.list_collection_names()\n",
+        "    st.write(\"collection already exists : \")\n",
+        "    st.write(collections)\n",
+        "\n",
+        "#defining function to scrape the data from twitter\n",
+        "\n",
+        "tweets_list1 = []\n",
+        "with st.form(\"my_form\"):\n",
+        "    default_since = '2020-01-01'\n",
+        "    default_until = '2023-01-31'\n",
+        "    search = st.text_input(\"Enter key word to search : \")\n",
+        "    since = st.text_input('Enter the start_date :',default_since) \n",
+        "    until = st.text_input('Enter the end_date :', default_until)\n",
+        "    maxTweets = st.slider('Enter the tweet count to scrape:', 0,1000,100)\n",
+        "    maxTweets = int(maxTweets)\n",
+        "    summit = st.form_submit_button('Submit')\n",
+        "    if summit:\n",
+        "        allsearch = (f'{search} since:{since} until:{until}')\n",
+        "        for i,tweet in enumerate(sntwitter.TwitterSearchScraper(allsearch).get_items()):\n",
+        "            if i>maxTweets:\n",
+        "                break\n",
+        "            tweets_list1.append([tweet.date, tweet.id, tweet.content, tweet.user.username, tweet.url, tweet.replyCount,  tweet.retweetCount,tweet.lang, tweet.likeCount ])\n",
+        "\n",
+        "\n",
+        "tweets_df1 = pd.DataFrame(tweets_list1, columns=['DateTime', 'Tweet_ID', 'Content', 'User_Name', 'URL', 'Reply_count', 'Re_Tweet_Count','Language', 'Like_Count'])\n",
+        "st.write(tweets_df1)\n",
+        "\n",
+        "#creating the button to upload the data into mongodb server\n",
+        "with st.form(\"form\"):\n",
+        "    st.write(\"Press Enter to upload dataset into DB : \")\n",
+        "    enter = st.form_submit_button(\"Enter\")\n",
+        "    if enter:\n",
+        "        mongo(tweets_df1)\n",
+        "        \n",
+        "#defining the funtion to conver the dataset into csv format        \n",
+        "def convert_df(df):\n",
+        "    return df.to_csv(index=False).encode('utf-8')\n",
+        "\n",
+        "csv = convert_df(tweets_df1)\n",
+        "\n",
+        "st.download_button(\n",
+        "\"Press to Download the Dataframe to CSV file format\",\n",
+        "csv,\n",
+        "f\"{search}_tweet.csv\",\n",
+        "\"text/csv\",\n",
+        "key='download-csv'\n",
+        ")\n",
+        "\n",
+        "#defining the funtion to conver the dataset into json format\n",
+        "def convert_json(df):\n",
+        "    return df.to_json().encode('utf-8')\n",
+        "\n",
+        "json = convert_json(tweets_df1)\n",
+        "st.download_button(\n",
+        "\"Press to Download the Dataframe to JSON file format\",\n",
+        "json,\n",
+        "f\"{search}_tweet.json\",\n",
+        "\"text/json\",\n",
+        "key='download-json'\n",
+        ")\n",
+        "\n"
+      ]
+    }
+  ]
+}
